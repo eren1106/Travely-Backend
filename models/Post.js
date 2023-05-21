@@ -5,11 +5,6 @@ const PostSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  postID: {
-    type: String,
-    required: true,
-    unique: true,
-  },
   description: {
     type: String,
     required: true,
@@ -28,14 +23,10 @@ const PostSchema = new mongoose.Schema({
       message: "At least one image is required.",
     },
   },
-  rating: {
-    type: [Number],
-    default: [],
-  },
   numOfVisitors: {
     type: Number,
     default: 0,
   },
 }, { timestamps: true, versionKey: false });
 
-module.exports = mongoose.model("Post", PostSchema);
+export default mongoose.model("Post", PostSchema);

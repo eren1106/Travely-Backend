@@ -1,20 +1,25 @@
+// GUIDE TO USE THIS APP
+// run 'npm install' at terminal to install all packages (first time only)
+// run 'npm run dev' at terminal to start the app
+
 import express from 'express';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 const app = express();
-const port = 3000;
-
-dotenv.config();
+const port = 3001;
 
 // MIDDLEWARE
 app.use(express.json());
 
+const MONGO_URL="mongodb+srv://user69:passwordpassword@travely.cxjbvfx.mongodb.net/?retryWrites=true&w=majority";
+
 const connectDB = async () => {
   try {
     mongoose.set('strictQuery', false);
-    const conn = await mongoose.connect(process.env.MONGO_URL);
+    const conn = await mongoose.connect(MONGO_URL);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.log(error);
@@ -28,7 +33,9 @@ app.get('/', (req, res) => {
 });
 
 // ROUTES
+app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/users', userRoutes);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
