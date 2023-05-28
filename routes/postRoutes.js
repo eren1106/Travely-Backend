@@ -1,6 +1,6 @@
 import express from 'express';
 import Post from '../models/Post.js';
-
+import Comment from '../models/Comment.js'
 const router = express.Router();
 
 // Reusable middleware function for handling errors
@@ -36,6 +36,7 @@ router.post("/", async (req, res) => {
   try {
     const newPost = await Post.create(req.body);
     res.status(200).json(newPost);
+
   }
   catch (err) {
     handleErrors(res, err);
@@ -71,7 +72,7 @@ router.delete('/:id', async (req, res) => {
 // GET ALL COMMENTS BY POST ID
 router.get('/:id/comments', async (req, res) => {
   try {
-    const post = await Post.findById(postId);
+    const post = await Post.findById(req.params.id);
     const comments = post.comments;
     res.status(200).json({ comments });
   }
@@ -84,18 +85,16 @@ router.get('/:id/comments', async (req, res) => {
 router.post("/:id/comments", async (req, res) => {
   try {
     const postId = req.params.id;
-    const { username, userProfile, text } = req.body;
-
     const post = await Post.findById(postId);
-
-    const newComment = {
-      username,
-      userProfile,
-      text,
-    };
+    
+    const newComment = new Comment({
+      userID : req.body.userID,
+      commentText : req.body.commentText
+    });
 
     post.comments.push(newComment);
     await post.save();
+    res.status(200).json(post);
   }
   catch (err) {
     handleErrors(res, err);
