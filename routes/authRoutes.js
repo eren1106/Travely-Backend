@@ -1,8 +1,8 @@
 import express from 'express';
 
 const router = express.Router();
-const User = require("../models/User");
-const bcrypt = require("bcrypt");
+//const User = require("../models/User");
+//const bcrypt = require("bcrypt");
 
 // Reusable middleware function for handling errors
 const handleErrors = (res, err) => {

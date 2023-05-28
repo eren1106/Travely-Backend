@@ -71,7 +71,9 @@ router.delete('/:id', async (req, res) => {
 // GET ALL COMMENTS BY POST ID
 router.get('/:id/comments', async (req, res) => {
   try {
-
+    const post = await Post.findById(postId);
+    const comments = post.comments;
+    res.status(200).json({ comments });
   }
   catch (err) {
     handleErrors(res, err);
@@ -81,7 +83,19 @@ router.get('/:id/comments', async (req, res) => {
 // CREATE COMMENT
 router.post("/:id/comments", async (req, res) => {
   try {
+    const postId = req.params.id;
+    const { username, userProfile, text } = req.body;
 
+    const post = await Post.findById(postId);
+
+    const newComment = {
+      username,
+      userProfile,
+      text,
+    };
+
+    post.comments.push(newComment);
+    await post.save();
   }
   catch (err) {
     handleErrors(res, err);

@@ -27,6 +27,15 @@ const PostSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+
+  comments: {
+    type: [{
+      username: String,
+      userProfile: String,
+      text: String,
+    }],
+    default:0,
+  }
 }, { timestamps: true, versionKey: false });
 
 export default mongoose.model("Post", PostSchema);
