@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const CommentSchema = new mongoose.Schema({
+const RatingSchema = new mongoose.Schema({
     postID: {
         type: String,
         required: true,
@@ -9,10 +9,12 @@ const CommentSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    commentText:{
-        type: String,
+    rating:{
+        type: Number,
         required: true,
+        min:1,
+        max:5
     }
 }, { timestamps: true, versionKey: false });
 
-export default mongoose.model("Comment", CommentSchema);
+export default mongoose.model("Rating", RatingSchema);
