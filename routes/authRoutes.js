@@ -14,12 +14,19 @@ const handleErrors = (res, err) => {
 router.post('/register', async (req, res) => {
   try {
 
+    // Check if email already exists
+    const existingUser = await User.findOne({ email: req.body.email });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Email already exists' });
+    }
+    
     //generate new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
     //create new user
     const newUser = new User({
+      userID: req.body.userID,
       username: req.body.username,
       email: req.body.email,
       password: hashedPassword,
