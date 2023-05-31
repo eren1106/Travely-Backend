@@ -1,8 +1,9 @@
 import express from 'express';
-
+import User from '../models/User.js'
+import bcrypt from 'bcrypt'
 const router = express.Router();
-//const User = require("../models/User");
-//const bcrypt = require("bcrypt");
+
+
 
 // Reusable middleware function for handling errors
 const handleErrors = (res, err) => {
@@ -26,7 +27,6 @@ router.post('/register', async (req, res) => {
 
     //create new user
     const newUser = new User({
-      userID: req.body.userID,
       username: req.body.username,
       email: req.body.email,
       password: hashedPassword,
