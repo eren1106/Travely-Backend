@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Comment from "../models/Comment.js"
+
 const PostSchema = new mongoose.Schema({
   userID: {
     type: String,
@@ -28,10 +28,6 @@ const PostSchema = new mongoose.Schema({
     default: 0,
   },
 
-  comments: {
-    type: [Comment.Schema],
-    default:[]
-  }
 }, { timestamps: true, versionKey: false });
 
 export default mongoose.model("Post", PostSchema);
