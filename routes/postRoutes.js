@@ -2,6 +2,8 @@ import express from "express";
 import Post from "../models/Post.js";
 import Comment from "../models/Comment.js";
 import Rating from "../models/Rating.js";
+import User from '../models/User.js';
+
 const router = express.Router();
 
 // Reusable middleware function for handling errors
@@ -74,7 +76,21 @@ router.delete("/:id", async (req, res) => {
 router.get("/:id/comments", async (req, res) => {
   try {
     const comments = await Comment.find({ postID: req.params.id });
-    res.status(200).json(comments);
+    const commentsWithUserDetails = await Promise.all(
+      comments.map(async (comment) => {
+        const user = await User.findById(comment.userID);
+        const commentWithUserDetail = {
+          postID: comment.postID,
+          userID: comment.userID,
+          commentText: comment.commentText,
+          createdAt: comment.createdAt,
+          username: user.username,
+          profilePicture: user.profilePicture,
+        }
+        return commentWithUserDetail;
+      })
+    );
+    res.status(200).json(commentsWithUserDetails);
   } catch (err) {
     handleErrors(res, err);
   }
