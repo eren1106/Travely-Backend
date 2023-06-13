@@ -12,7 +12,7 @@ router.post('/register', async (req, res) => {
     // Check if email already exists
     const existingUser = await User.findOne({ email: req.body.email });
     if (existingUser) {
-      return res.status(409).json({ message: 'Email already exists' });
+      return res.status(409).json("Email already exists");
     }
     
     //generate new password
