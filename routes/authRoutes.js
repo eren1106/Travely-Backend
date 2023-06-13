@@ -5,12 +5,6 @@ const router = express.Router();
 
 
 
-// Reusable middleware function for handling errors
-const handleErrors = (res, err) => {
-  console.log(err);
-  res.status(500).json(err);
-};
-
 // REGISTER
 router.post('/register', async (req, res) => {
   try {
@@ -39,7 +33,8 @@ router.post('/register', async (req, res) => {
 
   }
   catch (err) {
-    handleErrors(res, err);
+    console.log(err);
+    res.status(500).json(err);
   }
 });
 
@@ -53,13 +48,18 @@ router.post('/login', async (req, res) => {
 
     // validate password by comparing with the actual password
     const validPassword = await bcrypt.compare(req.body.password, user.password)
-    !validPassword && res.status(400).json("wrong password")
 
-    res.status(200).json(user)
+    if(!validPassword){
+      res.status(400).json("wrong password")
+    }else{
+      res.status(200).json(user)
+    }
+    
 
   }
   catch (err) {
-    handleErrors(res, err);
+    console.log(err);
+    res.status(500).json(err);
   }
 });
 
@@ -83,7 +83,8 @@ router.post('/resetPassword', async (req, res) => {
 
   }
   catch (err) {
-    handleErrors(res, err);
+    console.log(err);
+    res.status(500).json(err);
   }
 });
 
