@@ -18,7 +18,8 @@ const port = 3001;
 app.use(express.json());
 app.use(cors());
 
-const MONGO_URL="mongodb+srv://user69:passwordpassword@travely.cxjbvfx.mongodb.net/?retryWrites=true&w=majority";
+//const MONGO_URL="mongodb+srv://user69:passwordpassword@travely.cxjbvfx.mongodb.net/?retryWrites=true&w=majority";
+const MONGO_URL="mongodb+srv://admin:admin@cluster0.rfieoui.mongodb.net/?retryWrites=true&w=majority";
 
 const connectDB = async () => {
   try {
