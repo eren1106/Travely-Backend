@@ -3,7 +3,7 @@ import Post from "../models/Post.js";
 import Comment from "../models/Comment.js";
 import Rating from "../models/Rating.js";
 import User from '../models/User.js';
-
+import mongoose from 'mongoose'
 const router = express.Router();
 
 // Reusable middleware function for handling errors
@@ -16,7 +16,54 @@ const handleErrors = (res, err) => {
 router.get("/", async (req, res) => {
   try {
     const posts = await Post.find();
-    res.status(200).json(posts);
+    const postsWithUserDetails = await Promise.all(
+      posts.map(async (post) => {
+        
+        // Find user details
+        const userId = new mongoose.Types.ObjectId(post.userID); // Convert string to ObjectId
+        const user = await User.findOne({ _id: userId });
+
+        // Calculate average rating
+        const ratings = await Rating.find({ postID: post._id });
+        let averageRating = 0;
+        if (ratings.length === 0){
+          averageRating = 0;
+        }else {
+          const sumOfRatings = ratings.reduce((sum, rating) => sum + rating.rating, 0);
+          averageRating = (sumOfRatings / ratings.length).toFixed(1);
+        }
+        
+        // Format date
+        const dateFormat = {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          hour12: true
+        };
+        const convertDateTimeFormat = (dates) =>{
+          const formatedDate =  dates.toLocaleString("en-US", dateFormat);
+          return formatedDate
+        }
+
+        const postWithUserDetail = {
+          postID: post._id,
+          userID: post.userID,
+          username: user.username,
+          profilePicture: user.profilePicture,
+          description: post.description,
+          location: post.location,
+          images: post.images[0],
+          numOfVisitors: post.numOfVisitors,
+          rating: averageRating,
+          createdAt: convertDateTimeFormat(post.createdAt),
+        };
+
+        return postWithUserDetail;
+      })
+    );
+    res.status(200).json(postsWithUserDetails);
   } catch (err) {
     handleErrors(res, err);
   }
@@ -41,7 +88,13 @@ router.get("/:id", async (req, res) => {
 //CREATE POST
 router.post("/", async (req, res) => {
   try {
-    const newPost = await Post.create(req.body);
+    const newPost = new Post({
+      userID: req.body.userID,
+      description:req.body.description,
+      location:req.body.location,
+      images:req.body.images,
+    });
+    await newPost.save()
     res.status(200).json(newPost);
   } catch (err) {
     handleErrors(res, err);
@@ -114,11 +167,15 @@ router.post("/:id/comments", async (req, res) => {
 // GET ALL RATING BY POST ID
 router.get("/:id/rating", async (req, res) => {
   try {
-    const rating = await Rating.find({ postID: req.params.id })
-    res.status(200).json(rating);
+    const ratings = await Rating.find({ postID: req.params.id });
+    // Calculate and return average rating
+    const sumOfRatings = ratings.reduce((sum, rating) => sum + rating.rating,0);
+    const averageRating = (sumOfRatings / ratings.length).toFixed(1)
+    res.status(200).json(averageRating);
   } catch (err) {
     handleErrors(res, err);
   }
+
 })
 
 // GET RATING BY POST ID AND USER ID
