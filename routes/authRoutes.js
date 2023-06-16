@@ -63,6 +63,44 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// GOOGLE LOGIN
+router.post('/googleLogin', async (req, res) => {
+  try {
+
+    // Check if email already exists
+    const existingUser = await User.findOne({ email: req.body.email });
+    console.log("check user exist or not");
+    if (existingUser) {
+      console.log("User already existed!");
+      //login Successfully
+      return res.status(200).json(existingUser);
+    }
+    
+    //generate new password
+    const salt = await bcrypt.genSalt(10);
+    console.log("hihihihi");
+    console.log(req.body.password + " : "  + salt);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+    console.log(req.body)
+    //create new user
+    const newUser = new User({
+      username: req.body.name,
+      email: req.body.email,
+      password: hashedPassword,
+    });
+
+    //save user and respond
+    const user = await newUser.save();
+    res.status(200).json(user);
+
+  }
+  catch (err) {
+    console.log(err);
+    res.status(500).json(err);
+  }
+});
+
 // RESET PASSWORD
 router.post('/reset', async (req, res) => {
   try {
@@ -110,7 +148,10 @@ router.post('/sendEmail', async (req, res) => {
     const userEmail = req.body.email;
     //const newPassword = req.body.newPassword;
 
+
     const user = await User.findOne({ email: userEmail });
+    console.log(req.body);
+    console.log(user);
     if(!user){
       return res.status(404).json("user not found");
     }
