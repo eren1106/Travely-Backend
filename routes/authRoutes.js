@@ -4,8 +4,6 @@ import bcrypt from 'bcrypt';
 import mailSend from '../models/mail.js';
 const router = express.Router();
 
-
-
 // REGISTER
 router.post('/register', async (req, res) => {
   try {
@@ -140,7 +138,7 @@ router.post('/reset', async (req, res) => {
 });
 
 
-// 发送邮箱验证码
+// SEND EMAIL VERIFICATION
 router.post('/sendEmail', async (req, res) => {
 
   try {
