@@ -2,10 +2,10 @@ import express from "express";
 import Post from "../models/Post.js";
 import Comment from "../models/Comment.js";
 import Rating from "../models/Rating.js";
-import User from '../models/User.js';
-import View from '../models/postView.js'
-import mongoose from 'mongoose'
-import ProfileView from '../models/profileView.js'
+import User from "../models/User.js";
+import View from "../models/postView.js";
+import mongoose from "mongoose";
+import ProfileView from "../models/profileView.js";
 
 const router = express.Router();
 
@@ -21,21 +21,23 @@ router.get("/", async (req, res) => {
     const posts = await Post.find();
     const postsWithUserDetails = await Promise.all(
       posts.map(async (post) => {
-        
         // Find user details
         const userId = new mongoose.Types.ObjectId(post.userID); // Convert string to ObjectId
         const user = await User.findOne({ _id: userId });
-
+        console.log(user);
         // Calculate average rating
         const ratings = await Rating.find({ postID: post._id });
         let averageRating = 0;
-        if (ratings.length === 0){
+        if (ratings.length === 0) {
           averageRating = 0;
-        }else {
-          const sumOfRatings = ratings.reduce((sum, rating) => sum + rating.rating, 0);
+        } else {
+          const sumOfRatings = ratings.reduce(
+            (sum, rating) => sum + rating.rating,
+            0
+          );
           averageRating = (sumOfRatings / ratings.length).toFixed(1);
         }
-        
+
         // Format date
         const dateFormat = {
           year: "numeric",
@@ -43,12 +45,12 @@ router.get("/", async (req, res) => {
           day: "numeric",
           hour: "numeric",
           minute: "numeric",
-          hour12: true
+          hour12: true,
         };
-        const convertDateTimeFormat = (dates) =>{
-          const formatedDate =  dates.toLocaleString("en-US", dateFormat);
+        const convertDateTimeFormat = (dates) => {
+          const formatedDate = dates.toLocaleString("en-US", dateFormat);
           return formatedDate;
-        }
+        };
 
         const postWithUserDetail = {
           postID: post._id,
@@ -62,7 +64,6 @@ router.get("/", async (req, res) => {
           rating: averageRating,
           createdAt: convertDateTimeFormat(post.createdAt),
         };
-
         return postWithUserDetail;
       })
     );
@@ -75,7 +76,7 @@ router.get("/", async (req, res) => {
 // GET POST BY USERID
 router.get("/:id", async (req, res) => {
   try {
-    const posts = await Post.find({userID :req.params.id});
+    const posts = await Post.find({ userID: req.params.id });
     const postsWithUserDetails = await Promise.all(
       posts.map(async (post) => {
         // Find user details
@@ -85,13 +86,16 @@ router.get("/:id", async (req, res) => {
         // Calculate average rating
         const ratings = await Rating.find({ postID: post._id });
         let averageRating = 0;
-        if (ratings.length === 0){
+        if (ratings.length === 0) {
           averageRating = 0;
-        }else {
-          const sumOfRatings = ratings.reduce((sum, rating) => sum + rating.rating, 0);
+        } else {
+          const sumOfRatings = ratings.reduce(
+            (sum, rating) => sum + rating.rating,
+            0
+          );
           averageRating = (sumOfRatings / ratings.length).toFixed(1);
         }
-        
+
         // Format date
         const dateFormat = {
           year: "numeric",
@@ -99,12 +103,12 @@ router.get("/:id", async (req, res) => {
           day: "numeric",
           hour: "numeric",
           minute: "numeric",
-          hour12: true
+          hour12: true,
         };
-        const convertDateTimeFormat = (dates) =>{
-          const formatedDate =  dates.toLocaleString("en-US", dateFormat);
+        const convertDateTimeFormat = (dates) => {
+          const formatedDate = dates.toLocaleString("en-US", dateFormat);
           return formatedDate;
-        }
+        };
 
         const postWithUserDetail = {
           postID: post._id,
@@ -124,8 +128,7 @@ router.get("/:id", async (req, res) => {
     );
     if (posts) {
       res.status(200).json(postsWithUserDetails);
-    }
-    else {
+    } else {
       res.status(404).json("Post not found");
     }
   } catch (err) {
@@ -138,11 +141,11 @@ router.post("/", async (req, res) => {
   try {
     const newPost = new Post({
       userID: req.body.userID,
-      description:req.body.description,
-      location:req.body.location,
-      images:req.body.images,
+      description: req.body.description,
+      location: req.body.location,
+      images: req.body.images,
     });
-    await newPost.save()
+    await newPost.save();
     res.status(200).json(newPost);
   } catch (err) {
     handleErrors(res, err);
@@ -187,7 +190,7 @@ router.get("/:id/comments", async (req, res) => {
           createdAt: comment.createdAt,
           username: user.username,
           profilePicture: user.profilePicture,
-        }
+        };
         return commentWithUserDetail;
       })
     );
@@ -217,14 +220,16 @@ router.get("/:id/rating", async (req, res) => {
   try {
     const ratings = await Rating.find({ postID: req.params.id });
     // Calculate and return average rating
-    const sumOfRatings = ratings.reduce((sum, rating) => sum + rating.rating,0);
-    const averageRating = (sumOfRatings / ratings.length).toFixed(1)
+    const sumOfRatings = ratings.reduce(
+      (sum, rating) => sum + rating.rating,
+      0
+    );
+    const averageRating = (sumOfRatings / ratings.length).toFixed(1);
     res.status(200).json(averageRating);
   } catch (err) {
     handleErrors(res, err);
   }
-
-})
+});
 
 // GET RATING BY POST ID AND USER ID
 router.get("/:id/rating/:userID", async (req, res) => {
@@ -239,7 +244,7 @@ router.get("/:id/rating/:userID", async (req, res) => {
   } catch (err) {
     handleErrors(res, err);
   }
-})
+});
 
 // UPSERT (update / insert) RATING
 router.put("/:id/rating/:userID", async (req, res) => {
@@ -257,13 +262,12 @@ router.put("/:id/rating/:userID", async (req, res) => {
         { $set: req.body },
         { new: true }
       );
-    }
-    else {
+    } else {
       rating = await Rating.create({
         postID: req.params.id,
         userID: req.params.userID,
         rating: req.body.rating,
-      })
+      });
     }
 
     res.status(200).json(rating);
@@ -285,56 +289,66 @@ router.delete("/:id/rating/:userID", async (req, res) => {
   }
 });
 
-
 // CREATE VIEW BY POSTID
-router.post("/:id/view", async (req,res) => {
+router.post("/:id/view", async (req, res) => {
   try {
     const newView = new View({
       postID: req.params.id,
       userID: req.body.userID,
-      date : req.body.date
+      date: req.body.date,
     });
     await newView.save();
     res.status(200).json(newView);
   } catch (err) {
-    handleErrors(res,err);
+    handleErrors(res, err);
+  }
+});
+
+//GET VIEW BY POSTID
+router.post("/:id/view", async (req, res) => {
+  try {
+    const view = await View.find({ postID: req.params.postID });
+    res.status(200).json(view);
+    return view;
+  } catch (error) {
+    handleErrors(res, err);
   }
 });
 
 // GET TOTAL POST VIEW OF A USER
-router.get("/:userID/view", async (req,res) =>{
+router.get("/:userID/view", async (req, res) => {
   try {
     const view = await View.find({ userID: req.params.userID });
     res.status(200).json(view);
     return view;
   } catch (error) {
-    handleErrors(res,err)
+    handleErrors(res, err);
   }
 });
 
 // CREATE PROFILE VIEW BY POSTID
-router.post("/:id/profileView", async (req,res) => {
+router.post("/:id/profileView", async (req, res) => {
   try {
     const newProfileView = new ProfileView({
       userID: req.params.id,
-      date : req.body.date
+      date: req.body.date,
     });
     await newProfileView.save();
     res.status(200).json(newProfileView);
   } catch (err) {
-    handleErrors(res,err);
+    handleErrors(res, err);
   }
 });
 
 // GET TOTAL PROFILE VIEW OF A USER
-router.get("/:id/profileView", async (req,res) =>{
+router.get("/:id/profileView", async (req, res) => {
   try {
     const view = await ProfileView.find({ userID: req.params.id });
     res.status(200).json(view);
     return view;
   } catch (error) {
-    handleErrors(res,err)
+    handleErrors(res, err);
   }
-})
+});
 
 export default router;
