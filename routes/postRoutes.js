@@ -4,6 +4,8 @@ import Comment from "../models/Comment.js";
 import Rating from "../models/Rating.js";
 import User from '../models/User.js';
 import mongoose from 'mongoose'
+import View from "../models/postView.js";
+import ProfileView from "../models/profileView.js"
 const router = express.Router();
 
 // Reusable middleware function for handling errors
@@ -298,5 +300,68 @@ router.delete("/:id/rating/:userID", async (req, res) => {
     handleErrors(res, err);
   }
 });
+
+// CREATE VIEW BY POSTID
+router.post("/:id/view", async (req, res) => {
+  try {
+    const newView = new View({
+      postID: req.params.id,
+      userID: req.body.userID,
+      date: req.body.date,
+    });
+    await newView.save();
+    res.status(200).json(newView);
+  } catch (err) {
+    handleErrors(res, err);
+  }
+});
+
+//GET VIEW BY POSTID
+router.post("/:id/view", async (req, res) => {
+  try {
+    const view = await View.find({ postID: req.params.postID });
+    res.status(200).json(view);
+    return view;
+  } catch (error) {
+    handleErrors(res, err);
+  }
+});
+
+// GET TOTAL POST VIEW OF A USER
+router.get("/:userID/view", async (req, res) => {
+  try {
+    const view = await View.find({ userID: req.params.userID });
+    res.status(200).json(view);
+    return view;
+  } catch (error) {
+    handleErrors(res, err);
+  }
+});
+
+// CREATE PROFILE VIEW BY POSTID
+router.post("/:id/profileView", async (req, res) => {
+  try {
+    const newProfileView = new ProfileView({
+      userID: req.params.id,
+      date: req.body.date,
+    });
+    await newProfileView.save();
+    res.status(200).json(newProfileView);
+  } catch (err) {
+    handleErrors(res, err);
+  }
+});
+
+// GET TOTAL PROFILE VIEW OF A USER
+router.get("/:id/profileView", async (req, res) => {
+  try {
+    const view = await ProfileView.find({ userID: req.params.id });
+    res.status(200).json(view);
+    return view;
+  } catch (error) {
+    handleErrors(res, err);
+  }
+});
+
 
 export default router;
