@@ -19,9 +19,8 @@ router.get("/", async (req, res) => {
     const postsWithUserDetails = await Promise.all(
       posts.map(async (post) => {
         
-        // Find user details
-        const userId = new mongoose.Types.ObjectId(post.userID); // Convert string to ObjectId
-        const user = await User.findOne({ _id: userId });
+        const user = await User.findById( post.userID );
+        console.log(post.userID);
 
         // Calculate average rating
         const ratings = await Rating.find({ postID: post._id });
@@ -78,6 +77,69 @@ router.get("/:id", async (req, res) => {
       res.status(200).json(post);
     }
     else {
+      res.status(404).json("Post not found");
+    }
+  } catch (err) {
+    handleErrors(res, err);
+  }
+});
+
+// GET POSTS BY ID
+router.get("/user/:id", async (req, res) => {
+  try {
+    const posts = await Post.find({ userID: req.params.id });
+    const postsWithUserDetails = await Promise.all(
+      posts.map(async (post) => {
+        // Find user details
+        const userId = new mongoose.Types.ObjectId(post.userID); // Convert string to ObjectId
+        const user = await User.findOne({ _id: userId });
+
+        // Calculate average rating
+        const ratings = await Rating.find({ postID: post._id });
+        let averageRating = 0;
+        if (ratings.length === 0) {
+          averageRating = 0;
+        } else {
+          const sumOfRatings = ratings.reduce(
+            (sum, rating) => sum + rating.rating,
+            0
+          );
+          averageRating = (sumOfRatings / ratings.length).toFixed(1);
+        }
+
+        // Format date
+        const dateFormat = {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          hour12: true,
+        };
+        const convertDateTimeFormat = (dates) => {
+          const formatedDate = dates.toLocaleString("en-US", dateFormat);
+          return formatedDate;
+        };
+
+        const postWithUserDetail = {
+          postID: post._id,
+          userID: post.userID,
+          username: user.username,
+          profilePicture: user.profilePicture,
+          description: post.description,
+          location: post.location,
+          images: post.images[0],
+          numOfVisitors: post.numOfVisitors,
+          rating: averageRating,
+          createdAt: convertDateTimeFormat(post.createdAt),
+        };
+
+        return postWithUserDetail;
+      })
+    );
+    if (posts) {
+      res.status(200).json(postsWithUserDetails);
+    } else {
       res.status(404).json("Post not found");
     }
   } catch (err) {
