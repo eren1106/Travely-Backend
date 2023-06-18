@@ -3,7 +3,10 @@ import Post from "../models/Post.js";
 import Comment from "../models/Comment.js";
 import Rating from "../models/Rating.js";
 import User from '../models/User.js';
+import View from '../models/postView.js'
 import mongoose from 'mongoose'
+import ProfileView from '../models/profileView.js'
+
 const router = express.Router();
 
 // Reusable middleware function for handling errors
@@ -44,7 +47,7 @@ router.get("/", async (req, res) => {
         };
         const convertDateTimeFormat = (dates) =>{
           const formatedDate =  dates.toLocaleString("en-US", dateFormat);
-          return formatedDate
+          return formatedDate;
         }
 
         const postWithUserDetail = {
@@ -69,13 +72,58 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET POST BY ID
+// GET POST BY USERID
 router.get("/:id", async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const posts = await Post.find({userID :req.params.id});
+    const postsWithUserDetails = await Promise.all(
+      posts.map(async (post) => {
+        // Find user details
+        const userId = new mongoose.Types.ObjectId(post.userID); // Convert string to ObjectId
+        const user = await User.findOne({ _id: userId });
 
-    if (post) {
-      res.status(200).json(post);
+        // Calculate average rating
+        const ratings = await Rating.find({ postID: post._id });
+        let averageRating = 0;
+        if (ratings.length === 0){
+          averageRating = 0;
+        }else {
+          const sumOfRatings = ratings.reduce((sum, rating) => sum + rating.rating, 0);
+          averageRating = (sumOfRatings / ratings.length).toFixed(1);
+        }
+        
+        // Format date
+        const dateFormat = {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          hour12: true
+        };
+        const convertDateTimeFormat = (dates) =>{
+          const formatedDate =  dates.toLocaleString("en-US", dateFormat);
+          return formatedDate;
+        }
+
+        const postWithUserDetail = {
+          postID: post._id,
+          userID: post.userID,
+          username: user.username,
+          profilePicture: user.profilePicture,
+          description: post.description,
+          location: post.location,
+          images: post.images[0],
+          numOfVisitors: post.numOfVisitors,
+          rating: averageRating,
+          createdAt: convertDateTimeFormat(post.createdAt),
+        };
+
+        return postWithUserDetail;
+      })
+    );
+    if (posts) {
+      res.status(200).json(postsWithUserDetails);
     }
     else {
       res.status(404).json("Post not found");
@@ -236,5 +284,57 @@ router.delete("/:id/rating/:userID", async (req, res) => {
     handleErrors(res, err);
   }
 });
+
+
+// CREATE VIEW BY POSTID
+router.post("/:id/view", async (req,res) => {
+  try {
+    const newView = new View({
+      postID: req.params.id,
+      userID: req.body.userID,
+      date : req.body.date
+    });
+    await newView.save();
+    res.status(200).json(newView);
+  } catch (err) {
+    handleErrors(res,err);
+  }
+});
+
+// GET TOTAL POST VIEW OF A USER
+router.get("/:userID/view", async (req,res) =>{
+  try {
+    const view = await View.find({ userID: req.params.userID });
+    res.status(200).json(view);
+    return view;
+  } catch (error) {
+    handleErrors(res,err)
+  }
+});
+
+// CREATE PROFILE VIEW BY POSTID
+router.post("/:id/profileView", async (req,res) => {
+  try {
+    const newProfileView = new ProfileView({
+      userID: req.params.id,
+      date : req.body.date
+    });
+    await newProfileView.save();
+    res.status(200).json(newProfileView);
+  } catch (err) {
+    handleErrors(res,err);
+  }
+});
+
+// GET TOTAL PROFILE VIEW OF A USER
+router.get("/:id/profileView", async (req,res) =>{
+  try {
+    const view = await ProfileView.find({ userID: req.params.id });
+    res.status(200).json(view);
+    return view;
+  } catch (error) {
+    handleErrors(res,err)
+  }
+})
 
 export default router;
